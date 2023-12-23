@@ -7,7 +7,7 @@ output:
     toc: true
     theme: united
     df_print: paged
-    code_folding: hide
+    code_folding: show
     toc_float: true
 ---
 
@@ -176,7 +176,8 @@ historical_titles = salary_data_indexed %>%
 # not working yet
 name_sequences = salary_data_indexed %>% 
   group_by(full_name, year) %>% 
-  mutate(count = if_else(lag(year) != year, 1, 0, 0), year_seq = cumsum(count)) %>%
+  arrange(desc(year)) %>% 
+  mutate(count = if_else(lag(year) == year & lag(full_name) == full_name, 1, 0, 0), year_seq = cumsum(count)) %>%
   ungroup() %>%
   select(-count) %>%
   group_by(full_name) %>% 
