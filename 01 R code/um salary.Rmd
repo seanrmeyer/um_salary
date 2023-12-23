@@ -1,0 +1,218 @@
+---
+title: "University of Michigan Salary Analysis"
+author: "Sean R. Meyer, MBA, PhD"
+date: "12/15/2023"
+output: 
+  html_notebook:
+    toc: true
+    theme: united
+    df_print: paged
+    code_folding: hide
+    toc_float: true
+---
+
+
+```{r setup}
+library(tidyverse, quietly = TRUE)
+library(readxl)
+library(furrr)
+library(progressr)
+library(fs)
+library(gender)
+library(data.table)
+parallel::detectCores()
+plan(multisession)
+```
+
+# Parallelize and combine salary spreadsheets
+
+[University of Michigan Library](https://quod.lib.umich.edu/e/errwpc/public/3/3/1/3314612.html)
+
+```{r}
+csv_file_list = dir_ls('../00 data sources/um salaries/')
+
+salary_data = csv_file_list %>%
+  purrr::map_df(~ read_excel(.x, col_names = c("campus", "name", "title", "dept", "ftr", "basis", "fraction", "gen_fund"), skip = 1), .id = "filename") %>% 
+  janitor::clean_names() %>% 
+  mutate(year = str_sub(filename, 
+                        start = 40L, 
+                        end = 43L) %>% 
+           as.numeric()) %>% 
+  select(-filename) %>% 
+  rename(full_name = name) %>% 
+  separate(full_name, 
+           into = c("last_name", "first_name"), 
+           remove = FALSE, 
+           sep = ",", 
+           extra = "merge") %>% 
+  arrange(full_name, year, title, year, desc(ftr))
+```
+
+# consumer price index prep
+
+[U.S. Bureau of Labor Statistics](https://data.bls.gov/timeseries/CUUR0000SA0?years_option=all_years)
+
+```{r}
+# src: https://data.bls.gov/timeseries/CUUR0000SA0?years_option=all_years
+# select 2002 - current year and check box to include annual averages
+# Click GO and download the .xlsx file
+
+cpi_data = read_excel("../00 data sources/cpi_data_2023.xlsx", skip = 10) %>% 
+  janitor::clean_names() %>% 
+  select(year, sep, annual, half1, half2) %>% 
+  mutate(cpi = coalesce(sep, half1)) %>%  
+  mutate(base_cpi = max(cpi))
+
+cpi_data %>% str()
+```
+
+# gender data prep
+
+[gender R package](https://github.com/lmullen/gender)
+
+```{r}
+gender_data = salary_data %>% 
+  distinct(across("first_name")) %>% 
+  pull(first_name) %>% 
+  gender(years = c("1957", "2005"), method = "ssa")
+
+gender_data %>% str()
+```
+
+```{r eval=FALSE}
+salary_data_indexed = salary_data %>% 
+  group_by(full_name) %>%
+  arrange(full_name, .by_group = TRUE) %>% 
+  mutate(full_name_id = cur_group_id()) %>% 
+  ungroup() %>%
+  # group_by(full_name, year) %>% 
+  # arrange(year, .by_group = TRUE) %>% 
+  # mutate(year_id = cur_group_id()) %>% 
+  # ungroup() %>% 
+  # group_split(full_name) %>%
+  # arrange(year) %>%
+  # mutate(title_id = cur_group_id()) %>%
+  # ungroup() %>%
+  # purrr::map_df(~.x %>% group_by(full_name, title) %>% 
+  #                   arrange(year, .by_group = TRUE) %>% 
+  #                   mutate(title_id = cur_group_id())) %>% 
+  # purrr::map_df(~.x %>% group_by(full_name, year) %>%
+  #                   arrange(year, .by_group = TRUE) %>%
+  #                   mutate(year_id = cur_group_id())) %>%
+  group_by(full_name, year) %>%
+  arrange(year, .by_group = TRUE) %>%
+  mutate(year_id = row_number()) %>% 
+  ungroup() %>% 
+  arrange(full_name, title, year) #%>% 
+  # ungroup() %>% 
+  # separate(full_name, into = c("last_name", "first_name"), remove = FALSE)
+
+# salary_data_indexed %>%
+#   View("salary_data_indexed")
+```
+
+```{r eval=FALSE}
+salary_data %>% 
+  group_by(full_name) %>%
+  arrange(full_name, .by_group = TRUE) %>% 
+  mutate(full_name_id = cur_group_id()) %>% 
+  ungroup() %>%
+  group_by(full_name, year) %>%
+  # distinct(across(c(full_name_id, full_name, year))) %>% 
+  arrange(full_name, year, .by_group = TRUE) %>%
+  mutate(year_id = cumsum(n())) %>% 
+  ungroup() %>% 
+  # mutate(year_id = row_number()) %>% 
+  # arrange(full_name, year, title) %>% 
+  filter(last_name == "Meyer")
+```
+
+
+# Generate title rankings
+
+```{r}
+title_rankings = salary_data_indexed %>% 
+  group_by(year, title) %>% 
+  reframe(full_name, title_rank = rank(desc(ftr), ties.method = "min"), title_count = n())
+```
+
+# Generate department rankings
+
+```{r}
+dept_rankings = salary_data_indexed %>% 
+  group_by(year, dept) %>% 
+  reframe(full_name, year, dept_rank = rank(desc(ftr), ties.method = "min"), dept_count = n())
+```
+
+# generate historical title data
+
+collapses title to csv grouped by name and year
+
+```{r}
+historical_titles_by_year = salary_data_indexed %>% 
+  # head() %>% 
+  select(full_name_id, year_id, title) %>% 
+  distinct(across(everything())) %>% 
+  group_by(full_name_id, year_id) %>% 
+  dplyr::reframe(full_name_id, year_id, historical_titles_by_year = paste(c(title, year_id), collapse = "; ")) %>% 
+  ungroup() %>% 
+  distinct(across(everything()))
+
+historical_titles = salary_data_indexed %>% 
+  ungroup() %>% 
+  select(full_name_id, title) %>% 
+  distinct(across(everything())) %>% 
+  group_by(full_name_id) %>% 
+  dplyr::reframe(full_name_id, historical_titles = paste(title, collapse = "; ")) %>% 
+  ungroup() %>% 
+  distinct(across(everything()))
+```
+
+```{r eval=FALSE}
+# Calculate sequences along year and title grouped by name
+
+# not working yet
+name_sequences = salary_data_indexed %>% 
+  group_by(full_name, year) %>% 
+  mutate(count = if_else(lag(year) != year, 1, 0, 0), year_seq = cumsum(count)) %>%
+  ungroup() %>%
+  select(-count) %>%
+  group_by(full_name) %>% 
+  mutate(count = if_else(lag(year) != year, 1, 0, 0), title_seq = cumsum(count)) %>% 
+  select(-count) #%>% 
+  # mutate(gaps_in_svc = year - lag(year) - 1, gaps_in_svc = if_else(gaps_in_svc > 0, gaps_in_svc, 0, 0)) %>% 
+  # select(full_name, year, year_seq, title_seq, gaps_in_svc)
+```
+
+# join prepped data sources
+
+```{r}
+
+salary_data_indexed %>% 
+  left_join(historical_titles_by_year) %>% 
+  left_join(historical_titles) %>% 
+  left_join(gender_data %>% select(first_name = name, proportion_male:gender)) %>% 
+  left_join(cpi_data) %>% 
+  left_join(title_rankings) %>% 
+  left_join(dept_rankings) %>% 
+  # rename(full_name = name) %>% 
+  # select(-filename) %>% 
+  mutate(ftr_cpi_adjusted = (base_cpi/cpi * ftr) %>% round(2)) %>% 
+  write_csv("../02 data output/salary_data_indexed.csv", append = FALSE)
+
+# salary_data_in %>% 
+#   select(name_id, grouped_id, everything()) %>% 
+#   write_csv("combined_data.csv")
+```
+
+```{r eval=FALSE}
+salary_data_indexed %>% 
+  DataExplorer::plot_bar()
+```
+
+```{r eval=FALSE}
+salary_data_indexed %>% 
+  DataExplorer::plot_histogram()
+```
+
+
