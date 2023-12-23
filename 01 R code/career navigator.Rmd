@@ -1,0 +1,56 @@
+---
+title: "University of Michigan Career Navigator"
+author: "Sean R. Meyer, MBA, PhD"
+date: "12/23/2023"
+output: 
+  html_notebook:
+    toc: true
+    theme: united
+    df_print: paged
+    code_folding: hide
+    toc_float: true
+---
+
+```{r setup}
+library(tidyverse, quietly = TRUE)
+library(furrr)
+library(fs)
+library(gender)
+parallel::detectCores()
+plan(multisession)
+```
+
+# Parallelize and combine spreadsheets
+
+This data was collected from the [UM Career Navigator Search Function](https://careernavigator.umich.edu/search)
+
+```{r}
+csv_file_list = dir_ls('../00 data sources/career families/')
+
+career_data = csv_file_list %>%
+  purrr::map_df(~ read_csv(.x, col_names = c("job_code", "job_title", "career_family", "career_band", "job_role", "path_level", "description"), skip = 1, show_col_types = FALSE), .id = "filename") %>% 
+  janitor::clean_names()
+```
+
+# Generate web links for career navigator site
+
+```{r}
+career_links = career_data %>% 
+  mutate(title_cleaned = gsub(" ", "-", tolower(job_title))) %>% 
+  mutate(title_cleaned = gsub("/", "", title_cleaned)) %>%
+  select(job_code, title_cleaned) %>% 
+  mutate(link = paste("https://careernavigator.umich.edu/job_detail", job_code, title_cleaned, sep = "/")) %>% 
+  select(job_code, link)
+
+career_links %>% 
+  dim()
+```
+
+```{r}
+career_data_out = career_data %>% 
+  inner_join(career_links)
+
+career_data_out %>% 
+  write_csv("../02 data output/career_navigator.csv", append = FALSE)
+```
+
