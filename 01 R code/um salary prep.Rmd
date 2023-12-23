@@ -168,8 +168,10 @@ historical_titles = salary_data_indexed %>%
   distinct(across(everything()))
 ```
 
-```{r eval=FALSE}
 # Calculate sequences along year and title grouped by name
+
+```{r eval=FALSE}
+
 
 # not working yet
 name_sequences = salary_data_indexed %>% 
