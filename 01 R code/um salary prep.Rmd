@@ -46,6 +46,9 @@ salary_data = csv_file_list %>%
            sep = ",", 
            extra = "merge") %>% 
   arrange(full_name, year, title, year, desc(ftr))
+
+salary_data %>% 
+  str()
 ```
 
 # consumer price index prep
@@ -127,7 +130,6 @@ salary_data %>%
   filter(last_name == "Meyer")
 ```
 
-
 # Generate title rankings
 
 ```{r}
@@ -150,7 +152,6 @@ collapses title to csv grouped by name and year
 
 ```{r}
 historical_titles_by_year = salary_data_indexed %>% 
-  # head() %>% 
   select(full_name_id, year_id, title) %>% 
   distinct(across(everything())) %>% 
   group_by(full_name_id, year_id) %>% 
@@ -171,7 +172,6 @@ historical_titles = salary_data_indexed %>%
 # Calculate sequences along year and title grouped by name
 
 ```{r eval=FALSE}
-
 
 # not working yet
 name_sequences = salary_data_indexed %>% 
@@ -206,15 +206,3 @@ salary_data_indexed %>%
 #   select(name_id, grouped_id, everything()) %>% 
 #   write_csv("combined_data.csv")
 ```
-
-```{r eval=FALSE}
-salary_data_indexed %>% 
-  DataExplorer::plot_bar()
-```
-
-```{r eval=FALSE}
-salary_data_indexed %>% 
-  DataExplorer::plot_histogram()
-```
-
-

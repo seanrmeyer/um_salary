@@ -41,9 +41,6 @@ career_links = career_data %>%
   select(job_code, title_cleaned) %>% 
   mutate(link = paste("https://careernavigator.umich.edu/job_detail", job_code, title_cleaned, sep = "/")) %>% 
   select(job_code, link)
-
-career_links %>% 
-  dim()
 ```
 
 ```{r}
@@ -52,5 +49,8 @@ career_data_out = career_data %>%
 
 career_data_out %>% 
   write_csv("../02 data output/career_navigator.csv", append = FALSE)
+
+career_links %>% 
+  str()
 ```
 
