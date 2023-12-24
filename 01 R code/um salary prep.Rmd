@@ -82,36 +82,12 @@ gender_data = salary_data %>%
 gender_data %>% str()
 ```
 
-```{r eval=FALSE}
+```{r}
 salary_data_indexed = salary_data %>% 
   group_by(full_name) %>%
   arrange(full_name, .by_group = TRUE) %>% 
   mutate(full_name_id = cur_group_id()) %>% 
-  ungroup() %>%
-  # group_by(full_name, year) %>% 
-  # arrange(year, .by_group = TRUE) %>% 
-  # mutate(year_id = cur_group_id()) %>% 
-  # ungroup() %>% 
-  # group_split(full_name) %>%
-  # arrange(year) %>%
-  # mutate(title_id = cur_group_id()) %>%
-  # ungroup() %>%
-  # purrr::map_df(~.x %>% group_by(full_name, title) %>% 
-  #                   arrange(year, .by_group = TRUE) %>% 
-  #                   mutate(title_id = cur_group_id())) %>% 
-  # purrr::map_df(~.x %>% group_by(full_name, year) %>%
-  #                   arrange(year, .by_group = TRUE) %>%
-  #                   mutate(year_id = cur_group_id())) %>%
-  group_by(full_name, year) %>%
-  arrange(year, .by_group = TRUE) %>%
-  mutate(year_id = row_number()) %>% 
-  ungroup() %>% 
-  arrange(full_name, title, year) #%>% 
-  # ungroup() %>% 
-  # separate(full_name, into = c("last_name", "first_name"), remove = FALSE)
-
-# salary_data_indexed %>%
-#   View("salary_data_indexed")
+  ungroup()
 ```
 
 ```{r eval=FALSE}
