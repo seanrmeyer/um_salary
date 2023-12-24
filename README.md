@@ -8,7 +8,7 @@
 
 ## R Notebooks
 
-[UM Salary Data](https://htmlpreview.github.io/?https://github.com/seanrmeyer/um_salary/blob/main/01%20R%20code/um%20salary.nb.html)
+[UM Salary Data]([https://htmlpreview.github.io/?https://github.com/seanrmeyer/um_salary/blob/main/01%20R%20code/um%20salary.nb.html](https://htmlpreview.github.io/?https://github.com/seanrmeyer/um_salary/blob/main/01%20R%20code/um%20salary%20prep.nb.html))
 
 [Career Navigator](https://htmlpreview.github.io/?https://github.com/seanrmeyer/um_salary/blob/main/01%20R%20code/career%20navigator.nb.html)
 
