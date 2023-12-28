@@ -3,22 +3,19 @@ title: "University of Michigan Salary Analysis"
 author: "Sean R. Meyer, MBA, PhD"
 date: "12/15/2023"
 output: 
-  html_document:
+  html_notebook:
     toc: true
     theme: united
     toc_float: true
     toc_depth: 2
 ---
 
-
 ```{r setup}
 library(tidyverse, quietly = TRUE)
 library(readxl)
 library(furrr)
-library(progressr)
 library(fs)
 library(gender)
-library(data.table)
 parallel::detectCores()
 plan(multisession)
 ```
@@ -127,27 +124,27 @@ collapses title to csv grouped by name and year
 
 ```{r}
 historical_titles_by_year = salary_data_indexed %>% 
-  select(full_name_id, year_id, title) %>% 
+  select(full_name, year, title) %>% 
   distinct(across(everything())) %>% 
-  group_by(full_name_id, year_id) %>% 
-  dplyr::reframe(full_name_id, year_id, historical_titles_by_year = paste(c(title, year_id), collapse = "; ")) %>% 
+  group_by(full_name, year) %>% 
+  dplyr::reframe(full_name, year, historical_titles_by_year = paste(c(title, year), collapse = "; ")) %>% 
   ungroup() %>% 
   distinct(across(everything()))
 
 historical_titles = salary_data_indexed %>% 
   ungroup() %>% 
-  select(full_name_id, title) %>% 
+  select(full_name, title) %>% 
   distinct(across(everything())) %>% 
-  group_by(full_name_id) %>% 
-  dplyr::reframe(full_name_id, historical_titles = paste(title, collapse = "; ")) %>% 
+  group_by(full_name) %>% 
+  dplyr::reframe(full_name, historical_titles = paste(title, collapse = "; ")) %>% 
   ungroup() %>% 
   distinct(across(everything()))
 ```
 
+
+
+```{r eval=FALSE, include=FALSE}
 # Calculate sequences along year and title grouped by name
-
-```{r eval=FALSE}
-
 # not working yet
 name_sequences = salary_data_indexed %>% 
   group_by(full_name, year) %>% 
