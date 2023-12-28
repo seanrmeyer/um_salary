@@ -6,7 +6,7 @@ output:
   html_notebook:
     toc: true
     theme: united
-    toc_float: true
+    toc_float: false
     toc_depth: 2
 ---
 
@@ -41,6 +41,11 @@ salary_data = csv_file_list %>%
            remove = FALSE, 
            sep = ",", 
            extra = "merge") %>% 
+  separate(first_name, 
+           into = c("first_name", "middle_name"), 
+           remove = FALSE, 
+           sep = " ", 
+           extra = "merge") %>% 
   arrange(full_name, year, title, year, desc(ftr))
 
 salary_data %>% 
@@ -71,22 +76,20 @@ cpi_data %>% str()
 
 ```{r}
 gender_data = salary_data %>% 
-  distinct(across("first_name")) %>% 
+  distinct(first_name) %>% 
   pull(first_name) %>% 
   gender(years = c("1957", "2005"), method = "ssa")
 
 gender_data %>% str()
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 salary_data_indexed = salary_data %>% 
   group_by(full_name) %>%
   arrange(full_name, .by_group = TRUE) %>% 
   mutate(full_name_id = cur_group_id()) %>% 
   ungroup()
-```
 
-```{r eval=FALSE}
 salary_data %>% 
   group_by(full_name) %>%
   arrange(full_name, .by_group = TRUE) %>% 
@@ -98,8 +101,7 @@ salary_data %>%
   mutate(year_id = cumsum(n())) %>% 
   ungroup() %>% 
   # mutate(year_id = row_number()) %>% 
-  # arrange(full_name, year, title) %>% 
-  filter(last_name == "Meyer")
+  # arrange(full_name, year, title)
 ```
 
 # Generate title rankings
@@ -127,7 +129,7 @@ historical_titles_by_year = salary_data_indexed %>%
   select(full_name, year, title) %>% 
   distinct(across(everything())) %>% 
   group_by(full_name, year) %>% 
-  dplyr::reframe(full_name, year, historical_titles_by_year = paste(c(title, year), collapse = "; ")) %>% 
+  dplyr::reframe(full_name, year, historical_titles_by_year = paste(c(title, year, ";"), collapse = " ")) %>% 
   ungroup() %>% 
   distinct(across(everything()))
 
@@ -136,12 +138,10 @@ historical_titles = salary_data_indexed %>%
   select(full_name, title) %>% 
   distinct(across(everything())) %>% 
   group_by(full_name) %>% 
-  dplyr::reframe(full_name, historical_titles = paste(title, collapse = "; ")) %>% 
+  dplyr::reframe(full_name, historical_titles = paste(c(title, ";"), collapse = " ")) %>% 
   ungroup() %>% 
   distinct(across(everything()))
 ```
-
-
 
 ```{r eval=FALSE, include=FALSE}
 # Calculate sequences along year and title grouped by name
@@ -162,7 +162,6 @@ name_sequences = salary_data_indexed %>%
 # join prepped data sources
 
 ```{r}
-
 salary_data_indexed %>% 
   left_join(historical_titles_by_year) %>% 
   left_join(historical_titles) %>% 
@@ -174,8 +173,4 @@ salary_data_indexed %>%
   # select(-filename) %>% 
   mutate(ftr_cpi_adjusted = (base_cpi/cpi * ftr) %>% round(2)) %>% 
   write_csv("../02 data output/salary_data_indexed.csv", append = FALSE)
-
-# salary_data_in %>% 
-#   select(name_id, grouped_id, everything()) %>% 
-#   write_csv("combined_data.csv")
 ```
