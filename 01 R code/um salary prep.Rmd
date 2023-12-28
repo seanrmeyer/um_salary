@@ -3,6 +3,11 @@ title: "University of Michigan Salary Analysis"
 author: "Sean R. Meyer, MBA, PhD"
 date: "12/15/2023"
 output: 
+  html_document:
+    toc: true
+    theme: united
+    toc_float: true
+    toc_depth: 2
   html_notebook:
     toc: true
     theme: united
