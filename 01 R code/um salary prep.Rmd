@@ -3,10 +3,13 @@ title: "University of Michigan Salary Analysis"
 author: "Sean R. Meyer, MBA, PhD"
 date: "12/15/2023"
 output: 
+  github_document:
+    toc: true
+    toc_depth: 2
   html_notebook:
     toc: true
     theme: united
-    toc_float: false
+    toc_float: true
     toc_depth: 2
 ---
 
@@ -107,7 +110,7 @@ salary_data %>%
 # Generate title rankings
 
 ```{r}
-title_rankings = salary_data_indexed %>% 
+title_rankings = salary_data %>% 
   group_by(year, title) %>% 
   reframe(full_name, title_rank = rank(desc(ftr), ties.method = "min"), title_count = n())
 ```
@@ -115,7 +118,7 @@ title_rankings = salary_data_indexed %>%
 # Generate department rankings
 
 ```{r}
-dept_rankings = salary_data_indexed %>% 
+dept_rankings = salary_data %>% 
   group_by(year, dept) %>% 
   reframe(full_name, year, dept_rank = rank(desc(ftr), ties.method = "min"), dept_count = n())
 ```
@@ -125,7 +128,7 @@ dept_rankings = salary_data_indexed %>%
 collapses title to csv grouped by name and year
 
 ```{r}
-historical_titles_by_year = salary_data_indexed %>% 
+historical_titles_by_year = salary_data %>% 
   select(full_name, year, title) %>% 
   distinct(across(everything())) %>% 
   group_by(full_name, year) %>% 
@@ -133,7 +136,7 @@ historical_titles_by_year = salary_data_indexed %>%
   ungroup() %>% 
   distinct(across(everything()))
 
-historical_titles = salary_data_indexed %>% 
+historical_titles = salary_data %>% 
   ungroup() %>% 
   select(full_name, title) %>% 
   distinct(across(everything())) %>% 
@@ -146,7 +149,7 @@ historical_titles = salary_data_indexed %>%
 ```{r eval=FALSE, include=FALSE}
 # Calculate sequences along year and title grouped by name
 # not working yet
-name_sequences = salary_data_indexed %>% 
+name_sequences = salary_data %>% 
   group_by(full_name, year) %>% 
   arrange(desc(year)) %>% 
   mutate(count = if_else(lag(year) == year & lag(full_name) == full_name, 1, 0, 0), year_seq = cumsum(count)) %>%
@@ -162,7 +165,7 @@ name_sequences = salary_data_indexed %>%
 # join prepped data sources
 
 ```{r}
-salary_data_indexed %>% 
+salary_data %>% 
   left_join(historical_titles_by_year) %>% 
   left_join(historical_titles) %>% 
   left_join(gender_data %>% select(first_name = name, proportion_male:gender)) %>% 
@@ -172,5 +175,5 @@ salary_data_indexed %>%
   # rename(full_name = name) %>% 
   # select(-filename) %>% 
   mutate(ftr_cpi_adjusted = (base_cpi/cpi * ftr) %>% round(2)) %>% 
-  write_csv("../02 data output/salary_data_indexed.csv", append = FALSE)
+  write_csv("../02 data output/salary_data.csv", append = FALSE)
 ```

@@ -22,6 +22,6 @@ A second data source containing job description information was scraped from the
 
 ## Prepared data output
 
-[Prepped Salary Data](https://www.dropbox.com/scl/fi/ecdemy0o2aqzivymttmd2/salary_data_indexed.csv?rlkey=3h3j90tbrtzzo13fscrdcq1dr&dl=0)
+[Prepped Salary Data](https://www.dropbox.com/scl/fi/isj68hwx646gz2cpau0tf/salary_data.csv?rlkey=8ohkfwkbbttqrhtz5s1cy8t43&dl=0)
 
 [Career Navigator Job Descriptions](https://www.dropbox.com/scl/fi/eagpul5f5wby0mhq50cgc/career_navigator.csv?rlkey=totd1713yxaukd7hgjqqkiapa&dl=0)
