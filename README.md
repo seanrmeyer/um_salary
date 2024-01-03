@@ -1,6 +1,6 @@
 # um_salary
 
-This project aggregates salary data from the University of Michigan into a single data source and incorporates supplemental data for CPI adjustments and binary gender probability related to first names.
+This project aggregates annual salary disclosures from the University of Michigan into a single data source and incorporates supplemental data for CPI adjustments and binary gender probability related to first names.
 
 A second data source containing job description information was scraped from the UM Career Navigator. There may be similarities between this and the salary data, but they don't appear to match completely.
 
